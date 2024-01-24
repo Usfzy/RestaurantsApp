@@ -6,9 +6,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.usfzy.restaurantsapp.model.Restaurant
 import com.usfzy.restaurantsapp.retrofit.RestaurantsApiService
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import retrofit2.Retrofit
@@ -18,12 +17,15 @@ class RestaurantViewModel(private val stateHandle: SavedStateHandle) : ViewModel
     val state = mutableStateOf(emptyList<Restaurant>())
     private var restInterface: RestaurantsApiService
 
+    private val errorHandler = CoroutineExceptionHandler { _, throwable ->
+        throwable.printStackTrace()
+    }
+
     init {
-        val retrofit: Retrofit = Retrofit
-            .Builder()
-            .addConverterFactory(GsonConverterFactory.create())
-            .baseUrl("https://restaurants-db-d98a6-default-rtdb.europe-west1.firebasedatabase.app/")
-            .build()
+        val retrofit: Retrofit =
+            Retrofit.Builder().addConverterFactory(GsonConverterFactory.create())
+                .baseUrl("https://restaurants-db-d98a6-default-rtdb.europe-west1.firebasedatabase.app/")
+                .build()
 
         restInterface = retrofit.create(RestaurantsApiService::class.java);
 
@@ -32,12 +34,15 @@ class RestaurantViewModel(private val stateHandle: SavedStateHandle) : ViewModel
 
     private fun getRestaurants() {
 
-        viewModelScope.launch(Dispatchers.IO) {// LAUNCH COROUTINE ON IO THREAD
-            val restaurants = restInterface.getRestaurants()
+        viewModelScope.launch(errorHandler) {// LAUNCH COROUTINE ON IO THREAD
+            val restaurants = getRemoteRestaurants()
+            state.value = restaurants
+        }
+    }
 
-            withContext(Dispatchers.Main) {
-                state.value = restaurants
-            } // UPDATE UI ON MAIN THREAD
+    private suspend fun getRemoteRestaurants(): List<Restaurant> {
+        return withContext(Dispatchers.IO) {
+            restInterface.getRestaurants()
         }
     }
 
@@ -54,9 +59,7 @@ class RestaurantViewModel(private val stateHandle: SavedStateHandle) : ViewModel
     }
 
     private fun storeSelection(restaurant: Restaurant) {
-        val savedToggled = stateHandle
-            .get<List<Int>?>(FAVORITES)
-            .orEmpty().toMutableList()
+        val savedToggled = stateHandle.get<List<Int>?>(FAVORITES).orEmpty().toMutableList()
 
         if (restaurant.isFavorite) savedToggled.add(restaurant.id)
         else savedToggled.remove(restaurant.id)
