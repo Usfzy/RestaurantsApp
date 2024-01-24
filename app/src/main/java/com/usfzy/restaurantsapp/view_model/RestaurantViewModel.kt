@@ -9,6 +9,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 
@@ -33,8 +34,12 @@ class RestaurantViewModel(private val stateHandle: SavedStateHandle) : ViewModel
 
     private fun getRestaurants() {
 
-        scope.launch {
-            restInterface.getRestaurants()
+        scope.launch {// LAUNCH COROUTINE ON IO THREAD
+            val restaurants = restInterface.getRestaurants()
+            
+            withContext(Dispatchers.Main) {
+                state.value = restaurants
+            } // UPDATE UI ON MAIN THREAD
         }
     }
 
@@ -77,4 +82,9 @@ class RestaurantViewModel(private val stateHandle: SavedStateHandle) : ViewModel
         return this
     }
 
+    override fun onCleared() {
+        super.onCleared()
+
+        job.cancel()
+    }
 }
