@@ -4,14 +4,20 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.usfzy.restaurantsapp.RestaurantsApplication
+import com.usfzy.restaurantsapp.database.RestaurantsDao
+import com.usfzy.restaurantsapp.database.RestaurantsDb
 import com.usfzy.restaurantsapp.model.Restaurant
 import com.usfzy.restaurantsapp.retrofit.RestaurantsApiService
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import retrofit2.HttpException
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
+import java.net.ConnectException
+import java.net.UnknownHostException
 
 class RestaurantViewModel(private val stateHandle: SavedStateHandle) : ViewModel() {
     val state = mutableStateOf(emptyList<Restaurant>())
@@ -20,6 +26,11 @@ class RestaurantViewModel(private val stateHandle: SavedStateHandle) : ViewModel
     private val errorHandler = CoroutineExceptionHandler { _, throwable ->
         throwable.printStackTrace()
     }
+
+    private val restaurantsDao: RestaurantsDao =
+        RestaurantsDb.getDaoInstance(
+            RestaurantsApplication.getContext()
+        )
 
     init {
         val retrofit: Retrofit =
@@ -35,14 +46,30 @@ class RestaurantViewModel(private val stateHandle: SavedStateHandle) : ViewModel
     private fun getRestaurants() {
 
         viewModelScope.launch(errorHandler) {// LAUNCH COROUTINE ON IO THREAD
-            val restaurants = getRemoteRestaurants()
+            val restaurants = getAllRestaurants()
             state.value = restaurants
         }
     }
 
-    private suspend fun getRemoteRestaurants(): List<Restaurant> {
+    private suspend fun getAllRestaurants(): List<Restaurant> {
         return withContext(Dispatchers.IO) {
-            restInterface.getRestaurants()
+            try {
+                val restaurants = restInterface.getRestaurants()
+                restaurantsDao.addAll(restaurants)
+                return@withContext restaurants
+            } catch (e: Exception) {
+                when (e) {
+                    is UnknownHostException,
+                    is ConnectException,
+                    is HttpException -> {
+                        return@withContext restaurantsDao.getAll()
+                    }
+
+                    else -> throw e
+
+                }
+
+            }
         }
     }
 

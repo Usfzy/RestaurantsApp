@@ -1,4 +1,4 @@
-package com.usfzy.restaurantsapp
+package com.usfzy.restaurantsapp.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
@@ -30,15 +30,22 @@ import com.usfzy.restaurantsapp.view_model.RestaurantViewModel
 
 @Composable
 fun RestaurantScreen(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    onItemClick: (id: Int) -> Unit,
 ) {
     val viewModel: RestaurantViewModel = viewModel()
 
     LazyColumn(contentPadding = PaddingValues(8.dp)) {
         items(viewModel.state.value) { restaurant ->
-            RestaurantItem(restaurant) { id ->
-                viewModel.toggleFavorite(id)
-            }
+            RestaurantItem(
+                restaurant,
+                onFavoriteClick = { id ->
+                    viewModel.toggleFavorite(id)
+                },
+                onItemClick = { id ->
+                    onItemClick(id)
+                },
+            )
         }
     }
 }
@@ -46,14 +53,18 @@ fun RestaurantScreen(
 @Composable
 fun RestaurantItem(
     item: Restaurant,
-    onClick: (id: Int) -> Unit,
+    onFavoriteClick: (id: Int) -> Unit,
+    onItemClick: (id: Int) -> Unit,
 ) {
 
     val icon = if (item.isFavorite) Icons.Filled.Favorite
     else Icons.Filled.FavoriteBorder
 
     Card(
-        elevation = CardDefaults.cardElevation(4.dp), modifier = Modifier.padding(8.dp)
+        elevation = CardDefaults.cardElevation(4.dp),
+        modifier = Modifier
+            .padding(8.dp)
+            .clickable { onItemClick(item.id) },
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
@@ -69,7 +80,7 @@ fun RestaurantItem(
                 icon = icon,
                 modifier = Modifier.weight(0.15f),
             ) {
-                onClick(item.id)
+                onFavoriteClick(item.id)
             }
         }
     }
@@ -90,9 +101,15 @@ fun RestaurantIcon(
 
 @Composable
 fun RestaurantDetails(
-    title: String, description: String, modifier: Modifier
+    title: String,
+    description: String,
+    modifier: Modifier,
+    horizontalAlignment: Alignment.Horizontal = Alignment.Start
 ) {
-    Column(modifier = modifier) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = horizontalAlignment,
+    ) {
         Text(
             text = title,
             style = MaterialTheme.typography.headlineSmall,
@@ -115,6 +132,6 @@ fun RestaurantDetails(
 @Composable
 fun RestaurantScreenPreview() {
     RestaurantsAppTheme {
-        RestaurantScreen()
+        RestaurantScreen {}
     }
 }
