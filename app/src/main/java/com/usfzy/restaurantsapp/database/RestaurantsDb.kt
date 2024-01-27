@@ -7,7 +7,9 @@ import androidx.room.RoomDatabase
 import com.usfzy.restaurantsapp.model.Restaurant
 
 @Database(
-    entities = [Restaurant::class], version = 1, exportSchema = false
+    entities = [Restaurant::class],
+    version = 2,
+    exportSchema = false
 )
 abstract class RestaurantsDb : RoomDatabase() {
 

@@ -7,6 +7,7 @@ import androidx.lifecycle.viewModelScope
 import com.usfzy.restaurantsapp.RestaurantsApplication
 import com.usfzy.restaurantsapp.database.RestaurantsDao
 import com.usfzy.restaurantsapp.database.RestaurantsDb
+import com.usfzy.restaurantsapp.model.PartialRestaurant
 import com.usfzy.restaurantsapp.model.Restaurant
 import com.usfzy.restaurantsapp.retrofit.RestaurantsApiService
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -38,7 +39,7 @@ class RestaurantViewModel(private val stateHandle: SavedStateHandle) : ViewModel
                 .baseUrl("https://restaurants-db-d98a6-default-rtdb.europe-west1.firebasedatabase.app/")
                 .build()
 
-        restInterface = retrofit.create(RestaurantsApiService::class.java);
+        restInterface = retrofit.create(RestaurantsApiService::class.java)
 
         getRestaurants()
     }
@@ -66,14 +67,13 @@ class RestaurantViewModel(private val stateHandle: SavedStateHandle) : ViewModel
                     }
 
                     else -> throw e
-
                 }
 
             }
         }
     }
 
-    fun toggleFavorite(id: Int) {
+    suspend fun toggleFavorite(id: Int) {
         val restaurants = state.value.toMutableList()
         val itemIndex = restaurants.indexOfFirst { it.id == id }
 
@@ -81,9 +81,21 @@ class RestaurantViewModel(private val stateHandle: SavedStateHandle) : ViewModel
         restaurants[itemIndex] = item.copy(isFavorite = !item.isFavorite)
 
         storeSelection(restaurants[itemIndex])
-
         state.value = restaurants
+
+        viewModelScope.launch {
+            toggleFavoriteRestaurant(id, item.isFavorite)
+        }
     }
+
+    private suspend fun toggleFavoriteRestaurant(id: Int, oldValue: Boolean) {
+        return withContext(Dispatchers.IO) {
+            restaurantsDao.updateRestaurant(
+                PartialRestaurant(id = id, isFavorite = !oldValue)
+            )
+        }
+    }
+
 
     private fun storeSelection(restaurant: Restaurant) {
         val savedToggled = stateHandle.get<List<Int>?>(FAVORITES).orEmpty().toMutableList()
@@ -101,9 +113,12 @@ class RestaurantViewModel(private val stateHandle: SavedStateHandle) : ViewModel
     private fun List<Restaurant>.restoreSelection(): List<Restaurant> {
 
         stateHandle.get<List<Int>?>(FAVORITES)?.let { selectedIds ->
-            val restaurantsMap = this.associateBy { it.id }
+            val restaurantsMap = this.associateBy { it.id }.toMutableMap()
+
             selectedIds.forEach { id ->
-                restaurantsMap[id]?.isFavorite = true
+                val restaurant = restaurantsMap[id] ?: return@forEach
+
+                restaurantsMap[id] = restaurant.copy(isFavorite = true)
             }
             return restaurantsMap.values.toList()
         }
