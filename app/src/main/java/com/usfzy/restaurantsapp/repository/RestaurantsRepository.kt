@@ -3,7 +3,8 @@ package com.usfzy.restaurantsapp.repository
 import com.usfzy.restaurantsapp.RestaurantsApplication
 import com.usfzy.restaurantsapp.database.RestaurantsDao
 import com.usfzy.restaurantsapp.database.RestaurantsDb
-import com.usfzy.restaurantsapp.model.PartialRestaurant
+import com.usfzy.restaurantsapp.model.LocalRestaurant
+import com.usfzy.restaurantsapp.model.PartialLocalRestaurant
 import com.usfzy.restaurantsapp.model.Restaurant
 import com.usfzy.restaurantsapp.retrofit.RestaurantsApiService
 import kotlinx.coroutines.Dispatchers
@@ -27,7 +28,15 @@ class RestaurantsRepository {
             RestaurantsApplication.getContext()
         )
 
-    suspend fun getAllRestaurants(): List<Restaurant> {
+    suspend fun getRestaurants(): List<Restaurant> {
+        return withContext(Dispatchers.IO) {
+            return@withContext restaurantsDao.getAll().map {
+                Restaurant(it.id, it.title, it.description, it.isFavorite)
+            }
+        }
+    }
+
+    suspend fun loadRestaurants() {
         return withContext(Dispatchers.IO) {
             try {
                 refreshCache()
@@ -44,7 +53,6 @@ class RestaurantsRepository {
                 }
 
             }
-            return@withContext restaurantsDao.getAll().sortedBy { it.title }
         }
     }
 
@@ -52,20 +60,23 @@ class RestaurantsRepository {
         val remoteRestaurants = restInterface.getRestaurants()
         val favoriteRestaurants = restaurantsDao.getAllFavorited()
 
-        restaurantsDao.addAll(remoteRestaurants)
+        restaurantsDao.addAll(remoteRestaurants.map {
+            LocalRestaurant(
+                it.id, it.title, it.description, false,
+            )
+        })
         restaurantsDao.updateAll(
             favoriteRestaurants.map {
-                PartialRestaurant(it.id, true)
+                PartialLocalRestaurant(it.id, true)
             }
         )
     }
 
-    suspend fun toggleFavoriteRestaurant(id: Int, oldValue: Boolean): List<Restaurant> {
-        return withContext(Dispatchers.IO) {
+    suspend fun toggleFavoriteRestaurant(id: Int, value: Boolean) {
+        withContext(Dispatchers.IO) {
             restaurantsDao.updateRestaurant(
-                PartialRestaurant(id = id, isFavorite = !oldValue)
+                PartialLocalRestaurant(id = id, isFavorite = value)
             )
-            return@withContext restaurantsDao.getAll()
         }
     }
 

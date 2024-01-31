@@ -6,11 +6,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.usfzy.restaurantsapp.repository.RestaurantsRepository
 import com.usfzy.restaurantsapp.state.RestaurantsScreenState
+import com.usfzy.restaurantsapp.usecases.GetInitialRestaurantsUseCase
+import com.usfzy.restaurantsapp.usecases.ToggleRestaurantUseCase
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.launch
 
 class RestaurantViewModel() : ViewModel() {
     private val restaurantsRepository = RestaurantsRepository()
+    private val getRestaurantsUseCase = GetInitialRestaurantsUseCase()
+    private val toggleRestaurantUseCase = ToggleRestaurantUseCase()
 
     private val _state = mutableStateOf(
         RestaurantsScreenState(
@@ -32,7 +36,7 @@ class RestaurantViewModel() : ViewModel() {
 
     private fun getRestaurants() {
         viewModelScope.launch(errorHandler) {// LAUNCH COROUTINE ON IO THREAD
-            val restaurants = restaurantsRepository.getAllRestaurants()
+            val restaurants = getRestaurantsUseCase()
             _state.value = _state.value.copy(
                 restaurants = restaurants,
                 isLoading = false,
@@ -43,7 +47,7 @@ class RestaurantViewModel() : ViewModel() {
 
     fun toggleFavorite(id: Int, oldValue: Boolean) {
         viewModelScope.launch {
-            val updatedRestaurants = restaurantsRepository.toggleFavoriteRestaurant(id, oldValue)
+            val updatedRestaurants = toggleRestaurantUseCase(id, oldValue)
             _state.value = _state.value.copy(restaurants = updatedRestaurants)
         }
     }

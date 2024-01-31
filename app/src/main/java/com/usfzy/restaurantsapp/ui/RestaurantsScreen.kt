@@ -26,19 +26,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.usfzy.restaurantsapp.model.Restaurant
+import com.usfzy.restaurantsapp.state.RestaurantsScreenState
 import com.usfzy.restaurantsapp.ui.theme.RestaurantsAppTheme
-import com.usfzy.restaurantsapp.view_model.RestaurantViewModel
 
 @Composable
 fun RestaurantScreen(
-    modifier: Modifier = Modifier,
+    state: RestaurantsScreenState,
     onItemClick: (id: Int) -> Unit,
+    onFavoriteClick: (id: Int, oldValue: Boolean) -> Unit,
 ) {
-    val viewModel: RestaurantViewModel = viewModel()
-    val state = viewModel.state.value
-
     Box(
         contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()
     ) {
@@ -47,7 +44,7 @@ fun RestaurantScreen(
                 RestaurantItem(
                     restaurant,
                     onFavoriteClick = { id, oldValue ->
-                        viewModel.toggleFavorite(id, oldValue)
+                        onFavoriteClick(id, oldValue)
                     },
                     onItemClick = { id ->
                         onItemClick(id)
@@ -143,6 +140,10 @@ fun RestaurantDetails(
 @Composable
 fun RestaurantScreenPreview() {
     RestaurantsAppTheme {
-        RestaurantScreen {}
+        RestaurantScreen(
+            RestaurantsScreenState(listOf(), true),
+            {},
+            { _, _ -> }
+        )
     }
 }

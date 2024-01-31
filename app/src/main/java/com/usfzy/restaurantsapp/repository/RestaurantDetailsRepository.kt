@@ -19,7 +19,13 @@ class RestaurantDetailsRepository {
     suspend fun getRestaurantDetails(id: Int): Restaurant {
         return withContext(Dispatchers.IO) {
             val response = restInterface.getRestaurant(id)
-            return@withContext response.values.first()
+
+            return@withContext response.values.first().let {
+                Restaurant(
+                    it.id,
+                    it.title, it.description,
+                )
+            }
         }
     }
 

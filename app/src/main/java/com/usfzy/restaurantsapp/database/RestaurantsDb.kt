@@ -4,10 +4,10 @@ import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.usfzy.restaurantsapp.model.Restaurant
+import com.usfzy.restaurantsapp.model.LocalRestaurant
 
 @Database(
-    entities = [Restaurant::class],
+    entities = [LocalRestaurant::class],
     version = 2,
     exportSchema = false
 )
