@@ -1,4 +1,6 @@
-package com.usfzy.restaurantsapp.model
+package com.usfzy.restaurantsapp.state
+
+import com.usfzy.restaurantsapp.model.Restaurant
 
 data class RestaurantsScreenState(
     val restaurants: List<Restaurant>,

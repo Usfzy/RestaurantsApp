@@ -1,5 +1,6 @@
-package com.usfzy.restaurantsapp
+package com.usfzy.restaurantsapp.repository
 
+import com.usfzy.restaurantsapp.RestaurantsApplication
 import com.usfzy.restaurantsapp.database.RestaurantsDao
 import com.usfzy.restaurantsapp.database.RestaurantsDb
 import com.usfzy.restaurantsapp.model.PartialRestaurant
@@ -43,11 +44,11 @@ class RestaurantsRepository {
                 }
 
             }
-            return@withContext restaurantsDao.getAll()
+            return@withContext restaurantsDao.getAll().sortedBy { it.title }
         }
     }
 
-    suspend fun refreshCache() {
+    private suspend fun refreshCache() {
         val remoteRestaurants = restInterface.getRestaurants()
         val favoriteRestaurants = restaurantsDao.getAllFavorited()
 

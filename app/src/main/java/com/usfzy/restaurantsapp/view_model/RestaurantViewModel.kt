@@ -4,8 +4,8 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.usfzy.restaurantsapp.RestaurantsRepository
-import com.usfzy.restaurantsapp.model.RestaurantsScreenState
+import com.usfzy.restaurantsapp.repository.RestaurantsRepository
+import com.usfzy.restaurantsapp.state.RestaurantsScreenState
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.launch
 
@@ -27,7 +27,6 @@ class RestaurantViewModel() : ViewModel() {
 
 
     init {
-
         getRestaurants()
     }
 
