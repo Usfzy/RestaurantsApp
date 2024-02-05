@@ -7,12 +7,18 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.usfzy.restaurantsapp.repository.RestaurantDetailsRepository
 import com.usfzy.restaurantsapp.state.RestaurantDetailsScreenState
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class RestaurantDetailsViewModel(stateHandle: SavedStateHandle) : ViewModel() {
+@HiltViewModel
+class RestaurantDetailsViewModel
+@Inject constructor(
+    stateHandle: SavedStateHandle,
+    private val repository: RestaurantDetailsRepository,
+) : ViewModel() {
 
-    private val repository = RestaurantDetailsRepository()
     private val _state = mutableStateOf(
         RestaurantDetailsScreenState(
             restaurant = null,

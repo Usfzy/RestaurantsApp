@@ -1,8 +1,6 @@
 package com.usfzy.restaurantsapp.repository
 
-import com.usfzy.restaurantsapp.RestaurantsApplication
 import com.usfzy.restaurantsapp.database.RestaurantsDao
-import com.usfzy.restaurantsapp.database.RestaurantsDb
 import com.usfzy.restaurantsapp.model.LocalRestaurant
 import com.usfzy.restaurantsapp.model.PartialLocalRestaurant
 import com.usfzy.restaurantsapp.model.Restaurant
@@ -10,23 +8,16 @@ import com.usfzy.restaurantsapp.retrofit.RestaurantsApiService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
 import java.net.ConnectException
 import java.net.UnknownHostException
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class RestaurantsRepository {
-
-    private val restInterface: RestaurantsApiService =
-        Retrofit.Builder().addConverterFactory(GsonConverterFactory.create())
-            .baseUrl("https://restaurants-db-d98a6-default-rtdb.europe-west1.firebasedatabase.app/")
-            .build()
-            .create(RestaurantsApiService::class.java)
-
-    private val restaurantsDao: RestaurantsDao =
-        RestaurantsDb.getDaoInstance(
-            RestaurantsApplication.getContext()
-        )
+@Singleton
+class RestaurantsRepository @Inject constructor(
+    private val restInterface: RestaurantsApiService,
+    private val restaurantsDao: RestaurantsDao,
+) {
 
     suspend fun getRestaurants(): List<Restaurant> {
         return withContext(Dispatchers.IO) {

@@ -1,16 +1,7 @@
 package com.usfzy.restaurantsapp
 
 import android.app.Application
-import android.content.Context
+import dagger.hilt.android.HiltAndroidApp
 
-class RestaurantsApplication : Application() {
-
-    init {
-        app = this
-    }
-
-    companion object {
-        private lateinit var app: RestaurantsApplication
-        fun getContext(): Context = app.applicationContext
-    }
-}
+@HiltAndroidApp
+class RestaurantsApplication : Application()

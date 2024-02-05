@@ -13,12 +13,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.usfzy.restaurantsapp.view_model.RestaurantDetailsViewModel
 
 @Composable()
 fun RestaurantDetailsScreen() {
-    val viewModel: RestaurantDetailsViewModel = viewModel()
+    val viewModel: RestaurantDetailsViewModel = hiltViewModel()
 
     val restaurantState = viewModel.state.value
 
