@@ -19,7 +19,7 @@ interface RestaurantsDao {
     suspend fun addAll(restaurants: List<LocalRestaurant>)
 
     @Update(entity = LocalRestaurant::class)
-    suspend fun updateRestaurant(partialRestaurant: PartialLocalRestaurant)
+    suspend fun update(partialRestaurant: PartialLocalRestaurant)
 
     @Update(entity = LocalRestaurant::class)
     suspend fun updateAll(partialRestaurants: List<PartialLocalRestaurant>)

@@ -7,4 +7,12 @@ object DummyContent {
         Restaurant(2, "title2", "description2", false),
         Restaurant(3, "title3", "description3", false)
     )
+
+    fun getRemoteRestaurants() = getDomainRestaurants().map {
+        RemoteRestaurant(
+            it.id,
+            it.title,
+            it.description,
+        )
+    }
 }

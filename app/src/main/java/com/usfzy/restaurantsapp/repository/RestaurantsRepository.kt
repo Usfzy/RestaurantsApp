@@ -1,10 +1,12 @@
 package com.usfzy.restaurantsapp.repository
 
 import com.usfzy.restaurantsapp.database.RestaurantsDao
+import com.usfzy.restaurantsapp.di.IODispatcher
 import com.usfzy.restaurantsapp.model.LocalRestaurant
 import com.usfzy.restaurantsapp.model.PartialLocalRestaurant
 import com.usfzy.restaurantsapp.model.Restaurant
 import com.usfzy.restaurantsapp.retrofit.RestaurantsApiService
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
@@ -17,10 +19,11 @@ import javax.inject.Singleton
 class RestaurantsRepository @Inject constructor(
     private val restInterface: RestaurantsApiService,
     private val restaurantsDao: RestaurantsDao,
+    @IODispatcher private val dispatcher: CoroutineDispatcher,
 ) {
 
     suspend fun getRestaurants(): List<Restaurant> {
-        return withContext(Dispatchers.IO) {
+        return withContext(dispatcher) {
             return@withContext restaurantsDao.getAll().map {
                 Restaurant(it.id, it.title, it.description, it.isFavorite)
             }
@@ -28,7 +31,7 @@ class RestaurantsRepository @Inject constructor(
     }
 
     suspend fun loadRestaurants() {
-        return withContext(Dispatchers.IO) {
+        return withContext(dispatcher) {
             try {
                 refreshCache()
             } catch (e: Exception) {
@@ -65,7 +68,7 @@ class RestaurantsRepository @Inject constructor(
 
     suspend fun toggleFavoriteRestaurant(id: Int, value: Boolean) {
         withContext(Dispatchers.IO) {
-            restaurantsDao.updateRestaurant(
+            restaurantsDao.update(
                 PartialLocalRestaurant(id = id, isFavorite = value)
             )
         }
